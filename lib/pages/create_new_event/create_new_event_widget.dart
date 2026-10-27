@@ -2438,6 +2438,30 @@ class _CreateNewEventWidgetState extends State<CreateNewEventWidget> {
                                           hoverColor: Colors.transparent,
                                           highlightColor: Colors.transparent,
                                           onTap: () async {
+                                            final validation =
+                                                await validateEventCreation();
+                                            if (!validation.allowed) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    validation.errorMessage ??
+                                                        'Quota mensal esgotada. Faz upgrade para o plano Premium.',
+                                                    style: TextStyle(
+                                                      color: FlutterFlowTheme.of(
+                                                              context)
+                                                          .info,
+                                                    ),
+                                                  ),
+                                                  backgroundColor:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .error,
+                                                ),
+                                              );
+                                              return;
+                                            }
+
                                             await EventsRecord.collection
                                                 .doc()
                                                 .set({

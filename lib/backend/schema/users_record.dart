@@ -50,6 +50,21 @@ class UsersRecord extends FirestoreRecord {
   String get photoUrl => _photoUrl ?? '';
   bool hasPhotoUrl() => _photoUrl != null;
 
+  // "subscription_tier" field.
+  String? _subscriptionTier;
+  String get subscriptionTier => _subscriptionTier ?? 'free';
+  bool hasSubscriptionTier() => _subscriptionTier != null;
+
+  // "events_published_this_month" field.
+  int? _eventsPublishedThisMonth;
+  int get eventsPublishedThisMonth => _eventsPublishedThisMonth ?? 0;
+  bool hasEventsPublishedThisMonth() => _eventsPublishedThisMonth != null;
+
+  // "last_reset_date" field.
+  DateTime? _lastResetDate;
+  DateTime? get lastResetDate => _lastResetDate;
+  bool hasLastResetDate() => _lastResetDate != null;
+
   void _initializeFields() {
     _email = snapshotData['email'] as String?;
     _displayName = snapshotData['display_name'] as String?;
@@ -58,6 +73,10 @@ class UsersRecord extends FirestoreRecord {
     _isPromoter = snapshotData['is_promoter'] as bool?;
     _phoneNumber = snapshotData['phone_number'] as String?;
     _photoUrl = snapshotData['photo_url'] as String?;
+    _subscriptionTier = snapshotData['subscription_tier'] as String?;
+    _eventsPublishedThisMonth =
+        castToType<int>(snapshotData['events_published_this_month']);
+    _lastResetDate = snapshotData['last_reset_date'] as DateTime?;
   }
 
   static CollectionReference get collection =>
@@ -101,6 +120,9 @@ Map<String, dynamic> createUsersRecordData({
   bool? isPromoter,
   String? phoneNumber,
   String? photoUrl,
+  String? subscriptionTier,
+  int? eventsPublishedThisMonth,
+  DateTime? lastResetDate,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -111,6 +133,9 @@ Map<String, dynamic> createUsersRecordData({
       'is_promoter': isPromoter,
       'phone_number': phoneNumber,
       'photo_url': photoUrl,
+      'subscription_tier': subscriptionTier,
+      'events_published_this_month': eventsPublishedThisMonth,
+      'last_reset_date': lastResetDate,
     }.withoutNulls,
   );
 
@@ -128,7 +153,10 @@ class UsersRecordDocumentEquality implements Equality<UsersRecord> {
         e1?.createdTime == e2?.createdTime &&
         e1?.isPromoter == e2?.isPromoter &&
         e1?.phoneNumber == e2?.phoneNumber &&
-        e1?.photoUrl == e2?.photoUrl;
+        e1?.photoUrl == e2?.photoUrl &&
+        e1?.subscriptionTier == e2?.subscriptionTier &&
+        e1?.eventsPublishedThisMonth == e2?.eventsPublishedThisMonth &&
+        e1?.lastResetDate == e2?.lastResetDate;
   }
 
   @override
@@ -139,7 +167,10 @@ class UsersRecordDocumentEquality implements Equality<UsersRecord> {
         e?.createdTime,
         e?.isPromoter,
         e?.phoneNumber,
-        e?.photoUrl
+        e?.photoUrl,
+        e?.subscriptionTier,
+        e?.eventsPublishedThisMonth,
+        e?.lastResetDate,
       ]);
 
   @override

@@ -17,6 +17,9 @@ export 'schema/util/schema_util.dart';
 
 export 'schema/events_record.dart';
 export 'schema/users_record.dart';
+export 'event_creation_validator.dart';
+export 'development_event_seed.dart';
+export 'development_map_event_repository.dart';
 
 /// Functions to query EventsRecords (as a Stream and as a Future).
 Future<int> queryEventsRecordCount({
@@ -96,16 +99,20 @@ Future<int> queryCollectionCount(
   Query collection, {
   Query Function(Query)? queryBuilder,
   int limit = -1,
-}) {
+}) async {
   final builder = queryBuilder ?? (q) => q;
   var query = builder(collection);
   if (limit > 0) {
     query = query.limit(limit);
   }
 
-  return query.count().get().catchError((err) {
+  try {
+    final snapshot = await query.count().get();
+    return snapshot.count ?? 0;
+  } catch (err) {
     print('Error querying $collection: $err');
-  }).then((value) => value.count!);
+    return 0;
+  }
 }
 
 Stream<List<T>> queryCollection<T>(

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #0B0E14;
+    --bg-surface: #121824;
+    --bg-card: #161F30;
+    --bg-card-hover: #1C273D;
+    
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.16);
+    --border-active: rgba(163, 230, 53, 0.35);
+
+    --lotus-lime: #A3E635;
+    --lotus-lime-hover: #BEF264;
+    --lotus-lime-glow: rgba(163, 230, 53, 0.2);
+    --lotus-lime-muted: rgba(163, 230, 53, 0.12);
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    min-height: 100vh;
+    overflow-x: hidden;
+    selection-background-color: var(--lotus-lime);
+    selection-color: #000000;
+  }
+
+  /* Custom Scrollbar for modern SaaS feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0E14;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+/* Glassmorphism & Glow Utilities */
+.glass-panel {
+  background: rgba(18, 24, 36, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(22, 31, 48, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lotus-glow {
+  box-shadow: 0 0 25px -5px rgba(163, 230, 53, 0.3);
+}
+
+.lotus-glow-sm {
+  box-shadow: 0 0 15px -3px rgba(163, 230, 53, 0.2);
+}
+
+.lotus-gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 30%, #A3E635 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

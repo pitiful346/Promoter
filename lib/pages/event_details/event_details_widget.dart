@@ -694,7 +694,7 @@ class _EventDetailsWidgetState extends State<EventDetailsWidget> {
                                           alignment:
                                               AlignmentDirectional(0.0, 0.0),
                                           child: FaIcon(
-                                            FontAwesomeIcons.ticketAlt,
+                                            FontAwesomeIcons.ticketSimple,
                                             color: FlutterFlowTheme.of(context)
                                                 .primaryText,
                                             size: 20.0,

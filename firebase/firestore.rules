@@ -1,18 +1,117 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /events/{document} {
-      allow create: if request.auth != null;
-      allow read: if true;
-      allow write: if request.auth != null;
-      allow delete: if false;
+    
+    // Helper function to check authentication
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    match /users/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth.uid == document;
+    // Helper function to check if user belongs to an organization (either as owner or member)
+    function isOrgMember(orgId) {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/organization_members/$(request.auth.uid + '_' + orgId)) ||
+        (exists(/databases/$(database)/documents/organizations/$(orgId)) && 
+         get(/databases/$(database)/documents/organizations/$(orgId)).data.created_by == request.auth.uid)
+      );
+    }
+
+    // 1. Events Collection (Shared between Lotus Mobile and Lotus Promoters Web)
+    match /events/{eventId} {
+      // Consumers (Lotus Mobile) can read published events
+      allow read: if resource.data.status == 'PUBLISHED' || resource.data.status == null || isOrgMember(resource.data.organization_id);
+      
+      // Promoters can create/update/delete events only for their own organization
+      allow create: if isAuthenticated() && isOrgMember(request.resource.data.organization_id);
+      allow update: if isOrgMember(resource.data.organization_id);
+      allow delete: if isOrgMember(resource.data.organization_id);
+    }
+
+    // 2. Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 3. Organizations Collection
+    match /organizations/{orgId} {
+      allow read: if true; // Public read for consumer mobile discovery
+      allow create: if isAuthenticated() && request.resource.data.created_by == request.auth.uid;
+      allow update: if isOrgMember(orgId);
+      allow delete: if isAuthenticated() && resource.data.created_by == request.auth.uid;
+    }
+
+    // 4. Organization Members Collection
+    match /organization_members/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOrgMember(request.resource.data.organization_id);
+      allow update, delete: if isAuthenticated() && isOrgMember(resource.data.organization_id);
+    }
+
+    // 5. Venues Collection
+    match /venues/{venueId} {
+      allow read: if true; // Public read so mobile app can show venue metadata
+      allow create: if isAuthenticated() && isOrgMember(request.resource.data.organization_id);
+      allow update: if isOrgMember(resource.data.organization_id);
+      allow delete: if isOrgMember(resource.data.organization_id);
+    }
+
+    // 6. Organization Followers Collection
+    match /organization_followers/{followId} {
+      allow read: if true; // Public count or check
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // 7. Lotus Radar Teasers Collection
+    match /radar_teasers/{teaserId} {
+      allow read: if resource.data.status == 'PUBLISHED' || resource.data.status == 'REVEALED' || isOrgMember(resource.data.organization_id);
+      allow create: if isAuthenticated() && isOrgMember(request.resource.data.organization_id);
+      allow update: if isOrgMember(resource.data.organization_id);
+      allow delete: if isOrgMember(resource.data.organization_id);
+    }
+
+    // 8. Lotus Radar User Trackings Collection
+    match /radar_trackings/{trackingId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // 9. System Notifications Log Collection
+    match /system_notifications/{notifId} {
+      allow read: if isAuthenticated() && isOrgMember(resource.data.organization_id);
+      allow create: if isAuthenticated() && isOrgMember(request.resource.data.organization_id);
+      allow update, delete: if isAuthenticated() && isOrgMember(resource.data.organization_id);
+    }
+
+    // 10. User Device Tokens & Preferences
+    match /user_device_tokens/{tokenId} {
+      allow read, write: if isAuthenticated() && (resource == null || resource.data.user_id == request.auth.uid);
+    }
+
+    match /user_notification_preferences/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 11. Event Ingestion Pipeline (Admin & System Protected)
+    match /event_sources/{sourceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /imported_events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /ingestion_runs/{runId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
   }
 }
+
+
