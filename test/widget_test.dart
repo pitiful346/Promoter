@@ -1,13 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:promoter/flutter_flow/nav/serialization_util.dart';
 import 'package:promoter/backend/event_creation_validator.dart';
 import 'package:promoter/pages/organizer_dashboard/promoter_dashboard_status.dart';
 import 'package:promoter/backend/development_event_seed.dart';
 import 'package:promoter/backend/development_map_event_repository.dart';
+import 'package:promoter/pages/organizer_dashboard/lotus_admin_screen.dart';
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    await initializeDateFormatting('pt_PT', null);
   });
 
   group('Promoter Serialization Tests', () {
@@ -234,6 +238,47 @@ void main() {
         maxLng: -8.600,
       );
       expect(baixaEvents.isNotEmpty, isTrue);
+    });
+  });
+
+  group('LotusAdminScreen B2B Promoter Dashboard Tests', () {
+    testWidgets('Renders LotusAdminScreen with 3 tabs and status card', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LotusAdminScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('LOTUS PROMOTER'), findsOneWidget);
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(find.text('Os Meus Eventos'), findsOneWidget);
+      expect(find.text('Criar Evento'), findsOneWidget);
+      expect(find.text('Métricas de Desempenho'), findsOneWidget);
+      expect(find.text('Total de Eventos'), findsOneWidget);
+      expect(find.text('Cliques no Mapa'), findsOneWidget);
+      expect(find.text('Pessoas no Radar'), findsOneWidget);
+    });
+
+    testWidgets('Can switch tabs between Dashboard, Os Meus Eventos, and Criar Evento', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LotusAdminScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on 'Os Meus Eventos' tab
+      await tester.tap(find.text('Os Meus Eventos'));
+      await tester.pumpAndSettle();
+
+      // Tap on 'Criar Evento' tab
+      await tester.tap(find.text('Criar Evento'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Criar Novo Evento'), findsOneWidget);
+      expect(find.text('Título do Evento *'), findsOneWidget);
+      expect(find.text('Categoria *'), findsOneWidget);
     });
   });
 }

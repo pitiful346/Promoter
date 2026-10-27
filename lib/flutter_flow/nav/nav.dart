@@ -77,20 +77,25 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       refreshListenable: appStateNotifier,
       navigatorKey: appNavigatorKey,
       errorBuilder: (context, state) => appStateNotifier.loggedIn
-          ? OrganizerDashboardWidget()
+          ? const LotusAdminScreen()
           : LoginWidget(),
       routes: [
         FFRoute(
           name: '_initialize',
           path: '/',
           builder: (context, _) => appStateNotifier.loggedIn
-              ? OrganizerDashboardWidget()
+              ? const LotusAdminScreen()
               : LoginWidget(),
         ),
         FFRoute(
           name: OrganizerDashboardWidget.routeName,
           path: OrganizerDashboardWidget.routePath,
-          builder: (context, params) => OrganizerDashboardWidget(),
+          builder: (context, params) => const LotusAdminScreen(),
+        ),
+        FFRoute(
+          name: LotusAdminScreen.routeName,
+          path: LotusAdminScreen.routePath,
+          builder: (context, params) => const LotusAdminScreen(),
         ),
         FFRoute(
           name: CreateNewEventWidget.routeName,

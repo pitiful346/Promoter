@@ -119,6 +119,15 @@ class DevelopmentMapEventRepository implements IMapEventRepository {
     }).toList();
   }
 
+  /// Adds an event to the repository and notifies listeners.
+  void addEvent(DevelopmentEvent event) => addOrUpdateEvent(event);
+
+  /// Removes an event by its ID and notifies listeners.
+  void deleteEvent(String id) {
+    _events.removeWhere((e) => e.id == id);
+    _eventsController.add(_events);
+  }
+
   /// Adds or updates an event in the mock repository and notifies listeners.
   void addOrUpdateEvent(DevelopmentEvent event) {
     final index = _events.indexWhere((e) => e.id == event.id);

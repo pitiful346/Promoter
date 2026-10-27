@@ -1,6 +1,8 @@
 // Export pages
 export '/pages/organizer_dashboard/organizer_dashboard_widget.dart'
     show OrganizerDashboardWidget;
+export '/pages/organizer_dashboard/lotus_admin_screen.dart'
+    show LotusAdminScreen;
 export '/pages/create_new_event/create_new_event_widget.dart'
     show CreateNewEventWidget;
 export '/pages/attendee_management/attendee_management_widget.dart'
