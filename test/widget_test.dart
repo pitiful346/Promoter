@@ -10,6 +10,8 @@ import 'package:promoter/pages/organizer_dashboard/promoter_dashboard_status.dar
 import 'package:promoter/backend/development_event_seed.dart';
 import 'package:promoter/backend/development_map_event_repository.dart';
 import 'package:promoter/pages/organizer_dashboard/lotus_admin_screen.dart';
+import 'package:promoter/pages/login/login_widget.dart';
+import 'package:promoter/pages/register/register_widget.dart';
 
 class _MockHttpOverrides extends HttpOverrides {
   @override
@@ -461,4 +463,79 @@ void main() {
       expect(newDeleteCount, equals(initialDeleteCount - 1));
     });
   });
+
+  group('Auth Screens Tests (Login & Register)', () {
+    testWidgets('LoginWidget: Renders inputs, validates email and provides demo bypass', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LoginWidget(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Check header and buttons
+      expect(find.text('Iniciar Sessão'), findsWidgets);
+      expect(find.text('Entrar como Promotor Demo'), findsOneWidget);
+      expect(find.text('Email Profissional'), findsOneWidget);
+      expect(find.text('Palavra-passe'), findsOneWidget);
+
+      // Submit without entering data to trigger form validation
+      final loginBtn = find.widgetWithText(ElevatedButton, 'Iniciar Sessão');
+      await tester.ensureVisible(loginBtn);
+      await tester.tap(loginBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Por favor introduz o teu email'), findsOneWidget);
+
+      // Enter valid email and short password
+      await tester.enterText(find.widgetWithText(TextFormField, 'promotor@teuespaco.pt').first, 'porto@promoter.pt');
+      await tester.enterText(find.widgetWithText(TextFormField, '••••••••').first, '123');
+      await tester.ensureVisible(loginBtn);
+      await tester.tap(loginBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('A palavra-passe deve ter pelo menos 6 caracteres'), findsOneWidget);
+    });
+
+    testWidgets('RegisterWidget: Renders fields, selects promoter chip and validates password match', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: RegisterWidget(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Criar Conta de Promotor'), findsWidgets);
+      expect(find.text('Nome da Organização / Espaço'), findsOneWidget);
+      expect(find.text('Discoteca / Clube'), findsOneWidget);
+      expect(find.text('Produtora / Festival'), findsOneWidget);
+      expect(find.text('Testar Registo Rápido Demo'), findsOneWidget);
+
+      // Select another promoter chip
+      await tester.tap(find.text('Produtora / Festival'));
+      await tester.pumpAndSettle();
+
+      // Enter mismatched passwords
+      await tester.enterText(find.byType(TextFormField).at(0), 'Porto Sounds Club');
+      await tester.enterText(find.byType(TextFormField).at(1), 'sounds@porto.pt');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'differentPassword');
+
+      final registerBtn = find.widgetWithText(ElevatedButton, 'Criar Conta e Aceder ao Painel');
+      await tester.ensureVisible(registerBtn);
+      await tester.tap(registerBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('As palavras-passe não coincidem'), findsOneWidget);
+    });
+  });
 }
+
