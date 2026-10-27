@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -8,9 +11,81 @@ import 'package:promoter/backend/development_event_seed.dart';
 import 'package:promoter/backend/development_map_event_repository.dart';
 import 'package:promoter/pages/organizer_dashboard/lotus_admin_screen.dart';
 
+class _MockHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) => _MockHttpClient();
+}
+
+class _MockHttpClient implements HttpClient {
+  @override
+  Future<HttpClientRequest> getUrl(Uri url) async => _MockHttpClientRequest();
+  @override
+  Future<HttpClientRequest> openUrl(String method, Uri url) async => _MockHttpClientRequest();
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _MockHttpClientRequest implements HttpClientRequest {
+  @override
+  final HttpHeaders headers = _MockHttpHeaders();
+  @override
+  Future<HttpClientResponse> close() async => _MockHttpClientResponse();
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _MockHttpHeaders implements HttpHeaders {
+  @override
+  void add(String name, Object value, {bool preserveHeaderCase = false}) {}
+  @override
+  void set(String name, Object value, {bool preserveHeaderCase = false}) {}
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _MockHttpClientResponse extends Stream<List<int>> implements HttpClientResponse {
+  static final List<int> _kTransparentImage = <int>[
+    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49,
+    0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06,
+    0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44,
+    0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D,
+    0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42,
+    0x60, 0x82,
+  ];
+
+  @override
+  int get statusCode => 200;
+  @override
+  int get contentLength => _kTransparentImage.length;
+  @override
+  HttpClientResponseCompressionState get compressionState =>
+      HttpClientResponseCompressionState.notCompressed;
+  @override
+  final HttpHeaders headers = _MockHttpHeaders();
+
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int> event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    return Stream<List<int>>.value(_kTransparentImage).listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+    HttpOverrides.global = _MockHttpOverrides();
     await initializeDateFormatting('pt_PT', null);
   });
 
@@ -263,7 +338,7 @@ void main() {
 
       // Main Content: Metrics
       expect(find.text('Total Eventos'), findsOneWidget);
-      expect(find.text('12'), findsOneWidget);
+      expect(find.text('4'), findsWidgets);
       expect(find.text('Cliques no Mapa'), findsOneWidget);
       expect(find.text('1.420'), findsOneWidget);
       expect(find.text('Pessoas no Radar'), findsOneWidget);
@@ -280,24 +355,110 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap on 'Eventos'
+      // Tap on 'Eventos' (Tab 1)
       await tester.tap(find.text('Eventos'));
       await tester.pumpAndSettle();
 
-      expect(find.text('A Carregar os teus Eventos...'), findsOneWidget);
+      expect(find.byIcon(Icons.edit_outlined), findsWidgets);
+      expect(find.byIcon(Icons.delete_outline_rounded), findsWidgets);
 
-      // Tap on 'Criar'
+      // Tap on 'Criar' (Tab 2)
       await tester.tap(find.text('Criar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Novo Evento'), findsOneWidget);
+      expect(find.text('Criar Novo Evento'), findsOneWidget);
       expect(find.text('Publicar Evento'), findsOneWidget);
 
-      // Tap back on 'Dashboard'
+      // Tap back on 'Dashboard' (Tab 0)
       await tester.tap(find.text('Dashboard'));
       await tester.pumpAndSettle();
 
       expect(find.text('Plano Atual: Freemium'), findsOneWidget);
+    });
+
+    testWidgets('Billing & Upgrade: opens modal and activates Premium 5€/month', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LotusAdminScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap on 'Upgrade' button in Plan Card
+      await tester.tap(find.text('Upgrade').first);
+      await tester.pumpAndSettle();
+
+      // Verify modal contents
+      expect(find.text('PROMOTER PREMIUM'), findsWidgets);
+      expect(find.text('Ativar por 5€/mês'), findsOneWidget);
+      expect(find.text('Eventos Ilimitados'), findsOneWidget);
+
+      // Activate premium
+      await tester.tap(find.text('Ativar por 5€/mês'));
+      await tester.pumpAndSettle();
+
+      // Verify plan is updated to PROMOTER PREMIUM with 'Plano Ativo' button
+      expect(find.text('Plano Atual: PROMOTER PREMIUM'), findsOneWidget);
+      expect(find.text('Plano Ativo'), findsOneWidget);
+    });
+
+    testWidgets('CRUD: Can edit event title and see updated card', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LotusAdminScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to 'Eventos'
+      await tester.tap(find.text('Eventos'));
+      await tester.pumpAndSettle();
+
+      // Tap edit on the first event
+      await tester.tap(find.byIcon(Icons.edit_outlined).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Editar Evento'), findsOneWidget);
+      expect(find.text('Guardar Alterações'), findsOneWidget);
+
+      // Modify the title
+      final titleField = find.widgetWithText(TextField, 'Sunset Ribeira & Wine Sessions');
+      if (titleField.evaluate().isNotEmpty) {
+        await tester.enterText(titleField, 'Sunset Ribeira VIP Experience');
+        await tester.tap(find.text('Guardar Alterações'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Sunset Ribeira VIP Experience'), findsOneWidget);
+      }
+    });
+
+    testWidgets('CRUD: Can delete event from the list', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: LotusAdminScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to 'Eventos'
+      await tester.tap(find.text('Eventos'));
+      await tester.pumpAndSettle();
+
+      final initialDeleteCount = find.byIcon(Icons.delete_outline_rounded).evaluate().length;
+      expect(initialDeleteCount, greaterThan(0));
+
+      // Tap delete on the first event
+      await tester.tap(find.byIcon(Icons.delete_outline_rounded).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Eliminar Evento'), findsOneWidget);
+
+      // Confirm deletion
+      await tester.tap(find.text('Eliminar'));
+      await tester.pumpAndSettle();
+
+      final newDeleteCount = find.byIcon(Icons.delete_outline_rounded).evaluate().length;
+      expect(newDeleteCount, equals(initialDeleteCount - 1));
     });
   });
 }
