@@ -252,7 +252,7 @@ class _OrganizerDashboardWidgetState extends State<OrganizerDashboardWidget> {
                                             gridViewEventsRecordList =
                                             snapshot.data!;
                                         if (gridViewEventsRecordList.isEmpty) {
-                                          return Image.asset(
+                                          return Image.network(
                                             'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_rjZdcePVp7vjnLcMGP1cguywZ6epEqVfAXjKlNWEyw&s=10',
                                           );
                                         }
