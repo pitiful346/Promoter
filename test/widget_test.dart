@@ -251,19 +251,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('LOTUS PROMOTER'), findsOneWidget);
-      expect(find.text('Dashboard'), findsOneWidget);
-      expect(find.text('Meus Eventos'), findsOneWidget);
-      expect(find.text('Criar'), findsOneWidget);
+      expect(find.text('Visão Geral'), findsOneWidget);
+      expect(find.text('Eventos'), findsOneWidget);
+      expect(find.text('Criar Evento'), findsOneWidget);
       expect(find.text('Plano Atual: Freemium'), findsOneWidget);
-      expect(find.text('0/1 eventos'), findsOneWidget);
-      expect(find.text('Fazer Upgrade para Ilimitado (5€)'), findsOneWidget);
+      expect(find.text('0/1 eventos este mês'), findsOneWidget);
+      expect(find.text('Upgrade'), findsOneWidget);
       expect(find.text('Total Eventos'), findsOneWidget);
       expect(find.text('Cliques no Mapa'), findsOneWidget);
       expect(find.text('Pessoas no Radar'), findsOneWidget);
       expect(find.text('Taxa de Conversão'), findsOneWidget);
     });
 
-    testWidgets('Can switch tabs between Dashboard, Meus Eventos, and Criar', (tester) async {
+    testWidgets('Can switch tabs between Visão Geral, Eventos, and Criar Evento', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: LotusAdminScreen(),
@@ -271,19 +271,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap on 'Meus Eventos' tab
-      await tester.tap(find.text('Meus Eventos'));
+      // Tap on 'Eventos' tab
+      await tester.tap(find.text('Eventos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Sunset Ribeira & Wine Sessions'), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsWidgets);
-      expect(find.byIcon(Icons.delete_outline), findsWidgets);
+      expect(find.byIcon(Icons.delete_outline_rounded), findsWidgets);
 
-      // Tap on 'Criar' tab
-      await tester.tap(find.text('Criar'));
+      // Tap on 'Criar Evento' tab
+      await tester.tap(find.text('Criar Evento'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Novo Evento'), findsOneWidget);
+      expect(find.text('Criar Novo Evento'), findsOneWidget);
       expect(find.text('Título'), findsOneWidget);
       expect(find.text('Morada / Link GPS'), findsOneWidget);
       expect(find.text('Data'), findsOneWidget);
