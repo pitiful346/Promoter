@@ -81,8 +81,8 @@ class _TabGroupWidgetState extends State<TabGroupWidget> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              flex: 1,
+            Flexible(
+              fit: FlexFit.loose,
               child: wrapWithModel(
                 model: _model.tabItemModel1,
                 updateCallback: () => safeSetState(() {}),
@@ -99,8 +99,8 @@ class _TabGroupWidgetState extends State<TabGroupWidget> {
               widget.label2Present,
               true,
             ))
-              Expanded(
-                flex: 1,
+              Flexible(
+                fit: FlexFit.loose,
                 child: wrapWithModel(
                   model: _model.tabItemModel2,
                   updateCallback: () => safeSetState(() {}),
@@ -117,8 +117,8 @@ class _TabGroupWidgetState extends State<TabGroupWidget> {
               widget.label3Present,
               true,
             ))
-              Expanded(
-                flex: 1,
+              Flexible(
+                fit: FlexFit.loose,
                 child: wrapWithModel(
                   model: _model.tabItemModel3,
                   updateCallback: () => safeSetState(() {}),
@@ -135,8 +135,8 @@ class _TabGroupWidgetState extends State<TabGroupWidget> {
               widget.label4Present,
               false,
             ))
-              Expanded(
-                flex: 1,
+              Flexible(
+                fit: FlexFit.loose,
                 child: wrapWithModel(
                   model: _model.tabItemModel4,
                   updateCallback: () => safeSetState(() {}),
@@ -150,8 +150,8 @@ class _TabGroupWidgetState extends State<TabGroupWidget> {
               widget.label5Present,
               false,
             ))
-              Expanded(
-                flex: 1,
+              Flexible(
+                fit: FlexFit.loose,
                 child: wrapWithModel(
                   model: _model.tabItemModel5,
                   updateCallback: () => safeSetState(() {}),
