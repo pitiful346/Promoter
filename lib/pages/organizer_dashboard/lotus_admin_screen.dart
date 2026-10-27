@@ -40,6 +40,7 @@ class _LotusAdminScreenState extends State<LotusAdminScreen> {
 
   // Events CRUD state
   List<DevelopmentEvent> _myEvents = [];
+  String _selectedPeriod = 'Últimos 30 dias';
 
   // Form Controllers (Criar Evento)
   final _createFormKey = GlobalKey<FormState>();
@@ -918,268 +919,335 @@ class _LotusAdminScreenState extends State<LotusAdminScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card Plano (Topo)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.0),
-              border: Border.all(color: borderColor, width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Esquerda: Texto do Plano
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 10.0,
-                        runSpacing: 4.0,
-                        children: [
-                          Text(
-                            isPremium
-                                ? 'Plano Atual: PROMOTER PREMIUM'
-                                : 'Plano Atual: Freemium',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: textDark,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0, vertical: 3.0),
-                            decoration: BoxDecoration(
-                              color: isPremium
-                                  ? const Color(0xFF10B981)
-                                      .withValues(alpha: 0.12)
-                                  : neonOrange.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6.0),
-                            ),
-                            child: Text(
-                              isPremium ? 'ILIMITADO' : '1 / MÊS',
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isPremium
-                                    ? const Color(0xFF10B981)
-                                    : neonOrange,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6.0),
-                      Text(
-                        isPremium
-                            ? 'Podes publicar eventos ilimitados e aceder a métricas de impacto no Porto.'
-                            : '$_eventsPublishedThisMonth/1 eventos este mês',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16.0),
+          // 1. Card do Plano com Barra de Quota
+          _buildPlanCard(isPremium),
 
-                // Direita: Botão Upgrade
-                isPremium
-                    ? OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(
-                              color: Color(0xFF10B981), width: 1.5),
-                          foregroundColor: const Color(0xFF10B981),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0, vertical: 12.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: textDark,
-                              content: Text(
-                                'A tua subscrição Premium está ativa (5€/mês).',
-                                style: GoogleFonts.inter(color: Colors.white),
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.check_circle_rounded,
-                            color: Color(0xFF10B981), size: 16),
-                        label: Text(
-                          'Plano Ativo',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    : ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24.0, vertical: 14.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: _showUpgradeDialog,
-                        child: Text(
-                          'Upgrade',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 36.0),
 
-          const SizedBox(height: 40.0),
+          // 2. Cabeçalho de Métricas com Filtro de Período
+          _buildMetricsHeader(),
 
-          // Título de Secção
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12.0,
-            runSpacing: 8.0,
-            children: [
-              Text(
-                'Métricas de Impacto',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: textDark,
-                ),
-              ),
-              Text(
-                'Últimos 30 dias no Porto',
-                style: GoogleFonts.inter(fontSize: 12, color: textMuted),
-              ),
-            ],
-          ),
           const SizedBox(height: 16.0),
 
-          // Grelha de Métricas (Wrap de 4 cartões de 220 x 120)
-          Wrap(
-            spacing: 20.0,
-            runSpacing: 20.0,
-            alignment: WrapAlignment.start,
-            children: [
-              _buildMetricCard(
-                  'Total Eventos', '${_myEvents.length}', Icons.calendar_today_rounded),
-              _buildMetricCard(
-                  'Cliques no Mapa', '1.420', Icons.touch_app_rounded),
-              _buildMetricCard(
-                  'Pessoas no Radar', '850', Icons.radar_rounded),
-              _buildMetricCard(
-                  'Taxa de Conversão', '18.4%', Icons.trending_up_rounded),
-            ],
-          ),
+          // 3. Grelha de Métricas (Wrap de 4 cartões de 220 x 120 com deltas)
+          _buildMetricsGrid(),
 
           const SizedBox(height: 32.0),
 
-          // Banner de Prova de Valor (SaaS Value Proposition)
-          Container(
-            padding: const EdgeInsets.all(22.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14.0),
-              border: Border.all(color: borderColor, width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: neonOrange.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: const Icon(Icons.rocket_launch_rounded,
-                      color: neonOrange, size: 28),
-                ),
-                const SizedBox(width: 18.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Porquê o Plano de 5€/mês?',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 4.0),
-                      Text(
-                        'Os eventos com marcadores destacados geram em média 3.8x mais interações no mapa do Porto. Desbloqueia pins animados, alertas de proximidade e eventos ilimitados.',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: textMedium,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!isPremium) ...[
-                  const SizedBox(width: 16.0),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: neonOrange,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18.0, vertical: 12.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    onPressed: _showUpgradeDialog,
-                    child: Text(
-                      'Upgrade 5€',
-                      style: GoogleFonts.inter(
-                          fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+          // 4. Visual Analytics: Tráfego Semanal & Distribuição Geográfica no Porto
+          _buildAnalyticsSection(),
+
+          const SizedBox(height: 32.0),
+
+          // 5. Tabela de Desempenho por Evento
+          _buildTopEventsTable(),
+
+          const SizedBox(height: 32.0),
+
+          // 6. Banner de Conversão SaaS (Prova de Valor 5€)
+          _buildSaasValueBanner(isPremium),
         ],
       ),
     );
   }
 
-  // Cartão 220 x 120 exato
-  Widget _buildMetricCard(String titulo, String valor, IconData icone) {
+  // 1. Card do Plano
+  Widget _buildPlanCard(bool isPremium) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: borderColor, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10.0,
+                  runSpacing: 4.0,
+                  children: [
+                    Text(
+                      isPremium
+                          ? 'Plano Atual: PROMOTER PREMIUM'
+                          : 'Plano Atual: Freemium',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textDark,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 3.0),
+                      decoration: BoxDecoration(
+                        color: isPremium
+                            ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                            : neonOrange.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: Text(
+                        isPremium ? 'ILIMITADO' : '1 / MÊS',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isPremium
+                              ? const Color(0xFF10B981)
+                              : neonOrange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6.0),
+                Text(
+                  isPremium
+                      ? 'Podes publicar eventos ilimitados e aceder a métricas de impacto no Porto.'
+                      : '$_eventsPublishedThisMonth/1 eventos este mês',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: textMuted,
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4.0),
+                  child: LinearProgressIndicator(
+                    value: isPremium
+                        ? 1.0
+                        : (_eventsPublishedThisMonth >= 1 ? 1.0 : 0.0),
+                    minHeight: 6,
+                    backgroundColor: const Color(0xFFF3F4F6),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isPremium ? const Color(0xFF10B981) : neonOrange,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 24.0),
+          isPremium
+              ? OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                        color: Color(0xFF10B981), width: 1.5),
+                    foregroundColor: const Color(0xFF10B981),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 12.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: textDark,
+                        content: Text(
+                          'A tua subscrição Premium está ativa (5€/mês).',
+                          style: GoogleFonts.inter(color: Colors.white),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.check_circle_rounded,
+                      color: Color(0xFF10B981), size: 16),
+                  label: Text(
+                    'Plano Ativo',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              : ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 14.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed: _showUpgradeDialog,
+                  child: Text(
+                    'Upgrade',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
+  // 2. Cabeçalho de Métricas com Filtro de Período
+  Widget _buildMetricsHeader() {
+    final periods = ['7 dias', 'Últimos 30 dias', 'Este Mês'];
+
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12.0,
+      runSpacing: 10.0,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Métricas de Impacto',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textDark,
+              ),
+            ),
+            const SizedBox(height: 2.0),
+            Text(
+              'Últimos 30 dias no Porto',
+              style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(color: borderColor),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: periods.map((p) {
+                  final isSelected = _selectedPeriod == p;
+                  return InkWell(
+                    onTap: () {
+                      setState(() => _selectedPeriod = p);
+                    },
+                    borderRadius: BorderRadius.circular(6.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 5.0),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? neonOrange.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: Text(
+                        p,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? neonOrange : textMedium,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(width: 10.0),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: borderColor),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0, vertical: 8.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: textDark,
+                    content: Text(
+                      'Relatório exportado para o período: $_selectedPeriod',
+                      style: GoogleFonts.inter(color: Colors.white),
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.download_rounded,
+                  size: 14, color: textMedium),
+              label: Text(
+                'Exportar',
+                style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: textMedium,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // 3. Grelha de Métricas
+  Widget _buildMetricsGrid() {
+    return Wrap(
+      spacing: 20.0,
+      runSpacing: 20.0,
+      alignment: WrapAlignment.start,
+      children: [
+        _buildMetricCard(
+          'Total Eventos',
+          '${_myEvents.length}',
+          Icons.calendar_today_rounded,
+          delta: '+100%',
+        ),
+        _buildMetricCard(
+          'Cliques no Mapa',
+          '1.420',
+          Icons.touch_app_rounded,
+          delta: '+28.4%',
+        ),
+        _buildMetricCard(
+          'Pessoas no Radar',
+          '850',
+          Icons.radar_rounded,
+          delta: '+14.2%',
+        ),
+        _buildMetricCard(
+          'Taxa de Conversão',
+          '18.4%',
+          Icons.trending_up_rounded,
+          delta: '+3.1%',
+        ),
+      ],
+    );
+  }
+
+  // Cartão de Métrica 220 x 120 exato
+  Widget _buildMetricCard(
+    String titulo,
+    String valor,
+    IconData icone, {
+    String? delta,
+  }) {
     return Container(
       width: 220,
       height: 120,
@@ -1198,7 +1266,6 @@ class _LotusAdminScreenState extends State<LotusAdminScreen> {
       ),
       child: Stack(
         children: [
-          // Título cinza pequeno no topo à esquerda
           Align(
             alignment: Alignment.topLeft,
             child: Text(
@@ -1210,8 +1277,6 @@ class _LotusAdminScreenState extends State<LotusAdminScreen> {
               ),
             ),
           ),
-
-          // Ícone no topo à direita
           Align(
             alignment: Alignment.topRight,
             child: Icon(
@@ -1220,22 +1285,604 @@ class _LotusAdminScreenState extends State<LotusAdminScreen> {
               size: 18,
             ),
           ),
-
-          // Valor (gigante) centrado
           Center(
             child: Padding(
-              padding: const EdgeInsets.only(top: 14.0),
-              child: Text(
-                valor,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: textDark,
-                  letterSpacing: -0.5,
+              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  valor,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: textDark,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
             ),
           ),
+          if (delta != null)
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.arrow_upward_rounded,
+                      size: 11, color: Color(0xFF10B981)),
+                  const SizedBox(width: 2),
+                  Text(
+                    delta,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF10B981),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'vs anterior',
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      color: textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 4. Secção de Análise Visual
+  Widget _buildAnalyticsSection() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isWide = constraints.maxWidth >= 780;
+        final chartWidget = _buildWeeklyActivityCard();
+        final zonesWidget = _buildPortoZonesCard();
+
+        if (isWide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 6, child: chartWidget),
+              const SizedBox(width: 20.0),
+              Expanded(flex: 4, child: zonesWidget),
+            ],
+          );
+        } else {
+          return Column(
+            children: [
+              chartWidget,
+              const SizedBox(height: 20.0),
+              zonesWidget,
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildWeeklyActivityCard() {
+    final days = [
+      {'day': 'Seg', 'val': 120, 'ratio': 0.23},
+      {'day': 'Ter', 'val': 95, 'ratio': 0.18},
+      {'day': 'Qua', 'val': 160, 'ratio': 0.31},
+      {'day': 'Qui', 'val': 240, 'ratio': 0.46},
+      {'day': 'Sex', 'val': 480, 'ratio': 0.92, 'peak': true},
+      {'day': 'Sáb', 'val': 520, 'ratio': 1.0, 'peak': true},
+      {'day': 'Dom', 'val': 210, 'ratio': 0.40},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(22.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: borderColor, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12.0,
+            runSpacing: 6.0,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Interações no Mapa Mapbox por Dia',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Pico de audiência às Sextas e Sábados à noite',
+                    style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0, vertical: 3.0),
+                decoration: BoxDecoration(
+                  color: neonOrange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+                child: Text(
+                  'Média: 260/dia',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: neonOrange,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24.0),
+          SizedBox(
+            height: 140,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: days.map((d) {
+                final bool isPeak = d['peak'] == true;
+                final double ratio = (d['ratio'] as num).toDouble();
+                final int val = d['val'] as int;
+                final String day = d['day'] as String;
+
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '$val',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight:
+                                isPeak ? FontWeight.bold : FontWeight.w500,
+                            color: isPeak ? neonOrange : textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          height: (90 * ratio).clamp(12.0, 90.0),
+                          decoration: BoxDecoration(
+                            color: isPeak
+                                ? neonOrange
+                                : neonOrange.withValues(alpha: 0.28),
+                            borderRadius: BorderRadius.circular(6.0),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          day,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight:
+                                isPeak ? FontWeight.bold : FontWeight.normal,
+                            color: isPeak ? textDark : textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortoZonesCard() {
+    final zones = [
+      {
+        'name': 'Baixa & Galerias de Paris',
+        'percent': 54,
+        'clicks': 768,
+        'color': neonOrange
+      },
+      {
+        'name': 'Ribeira & Cais de Gaia',
+        'percent': 26,
+        'clicks': 370,
+        'color': const Color(0xFF3B82F6)
+      },
+      {
+        'name': 'Cedofeita & Miguel Bombarda',
+        'percent': 14,
+        'clicks': 198,
+        'color': const Color(0xFF8B5CF6)
+      },
+      {
+        'name': 'Foz do Douro & Boavista',
+        'percent': 6,
+        'clicks': 84,
+        'color': const Color(0xFF10B981)
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(22.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: borderColor, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Radar por Zona do Porto',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: textDark,
+                ),
+              ),
+              const Icon(Icons.location_city_rounded,
+                  size: 18, color: textMuted),
+            ],
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            'Origem dos utilizadores a interagir no mapa',
+            style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+          ),
+          const SizedBox(height: 18.0),
+          ...zones.map((z) {
+            final String name = z['name'] as String;
+            final int percent = z['percent'] as int;
+            final int clicks = z['clicks'] as int;
+            final Color color = z['color'] as Color;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textDark,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        '$percent% ($clicks)',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: textMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5.0),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4.0),
+                    child: LinearProgressIndicator(
+                      value: percent / 100.0,
+                      minHeight: 6,
+                      backgroundColor: const Color(0xFFF3F4F6),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  // 5. Tabela de Desempenho por Evento
+  Widget _buildTopEventsTable() {
+    final topEvents = _myEvents.take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(22.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: borderColor, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12.0,
+            runSpacing: 6.0,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Desempenho por Evento',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Análise comparativa das interações no Porto',
+                    style: GoogleFonts.inter(fontSize: 12, color: textMuted),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() => _selectedIndex = 1);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Ver Todos (${_myEvents.length})',
+                        style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: neonOrange)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded,
+                        size: 14, color: neonOrange),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16.0),
+          const Divider(color: borderColor, height: 1),
+          const SizedBox(height: 8.0),
+          if (topEvents.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24.0),
+              child: Center(
+                child: Text(
+                  'Ainda não tens eventos para mostrar métricas individuais.',
+                  style: GoogleFonts.inter(color: textMuted, fontSize: 13),
+                ),
+              ),
+            )
+          else
+            ...topEvents.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final ev = entry.value;
+              final clicks = 480 - (idx * 110);
+              final radar = 290 - (idx * 65);
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6.0),
+                      child: Image.network(
+                        ev.image,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 44,
+                          height: 44,
+                          color: const Color(0xFFF3F4F6),
+                          child: const Icon(Icons.image_not_supported_rounded,
+                              size: 18, color: textMuted),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14.0),
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ev.title,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: textDark,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            ev.locationName,
+                            style: GoogleFonts.inter(
+                                fontSize: 11, color: textMuted),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$clicks cliques',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: textDark,
+                            ),
+                          ),
+                          Text(
+                            '$radar no radar',
+                            style: GoogleFonts.inter(
+                                fontSize: 10, color: textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10.0),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 3.0),
+                      decoration: BoxDecoration(
+                        color: ev.isBoosted
+                            ? const Color(0xFFFEF3C7)
+                            : const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(6.0),
+                        border: Border.all(
+                          color: ev.isBoosted
+                              ? const Color(0xFFF59E0B)
+                              : borderColor,
+                        ),
+                      ),
+                      child: Text(
+                        ev.isBoosted ? '⭐ DESTAQUE' : 'NORMAL',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: ev.isBoosted
+                              ? const Color(0xFF92400E)
+                              : textMedium,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined,
+                          size: 18, color: textMedium),
+                      tooltip: 'Editar evento',
+                      onPressed: () => _showEditEventDialog(ev),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  // 6. Banner de Conversão SaaS
+  Widget _buildSaasValueBanner(bool isPremium) {
+    return Container(
+      padding: const EdgeInsets.all(22.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: borderColor, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              color: neonOrange.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: const Icon(Icons.rocket_launch_rounded,
+                color: neonOrange, size: 28),
+          ),
+          const SizedBox(width: 18.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Porquê o Plano de 5€/mês?',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: textDark,
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  'Os eventos com marcadores destacados geram em média 3.8x mais interações no mapa do Porto. Desbloqueia pins animados, alertas de proximidade e eventos ilimitados.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: textMedium,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!isPremium) ...[
+            const SizedBox(width: 16.0),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: neonOrange,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18.0, vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              onPressed: _showUpgradeDialog,
+              child: Text(
+                'Upgrade 5€',
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
         ],
       ),
     );
