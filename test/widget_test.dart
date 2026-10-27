@@ -253,16 +253,15 @@ void main() {
       // Sidebar
       expect(find.text('LOTUS PROMOTER'), findsOneWidget);
       expect(find.text('Dashboard'), findsOneWidget);
-      expect(find.text('Meus Eventos'), findsOneWidget);
-      expect(find.text('Criar Evento'), findsOneWidget);
+      expect(find.text('Eventos'), findsOneWidget);
+      expect(find.text('Criar'), findsOneWidget);
 
       // Main Content: Plan Card
       expect(find.text('Plano Atual: Freemium'), findsOneWidget);
       expect(find.text('0/1 eventos este mês'), findsOneWidget);
-      expect(find.text('Fazer Upgrade (5€/mês)'), findsOneWidget);
+      expect(find.text('Upgrade'), findsOneWidget);
 
       // Main Content: Metrics
-      expect(find.text('Visão Geral'), findsOneWidget);
       expect(find.text('Total Eventos'), findsOneWidget);
       expect(find.text('12'), findsOneWidget);
       expect(find.text('Cliques no Mapa'), findsOneWidget);
@@ -273,7 +272,7 @@ void main() {
       expect(find.text('18.4%'), findsOneWidget);
     });
 
-    testWidgets('Can select items on Left Sidebar', (tester) async {
+    testWidgets('Can select items on Left Sidebar and switch IndexedStack', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: LotusAdminScreen(),
@@ -281,19 +280,24 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap on 'Meus Eventos'
-      await tester.tap(find.text('Meus Eventos'));
+      // Tap on 'Eventos'
+      await tester.tap(find.text('Eventos'));
       await tester.pumpAndSettle();
 
-      // Tap on 'Criar Evento'
-      await tester.tap(find.text('Criar Evento'));
+      expect(find.text('A Carregar os teus Eventos...'), findsOneWidget);
+
+      // Tap on 'Criar'
+      await tester.tap(find.text('Criar'));
       await tester.pumpAndSettle();
 
-      // Tap on 'Dashboard'
+      expect(find.text('Novo Evento'), findsOneWidget);
+      expect(find.text('Publicar Evento'), findsOneWidget);
+
+      // Tap back on 'Dashboard'
       await tester.tap(find.text('Dashboard'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Visão Geral'), findsOneWidget);
+      expect(find.text('Plano Atual: Freemium'), findsOneWidget);
     });
   });
 }
