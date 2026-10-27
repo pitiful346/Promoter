@@ -252,15 +252,18 @@ void main() {
 
       expect(find.text('LOTUS PROMOTER'), findsOneWidget);
       expect(find.text('Dashboard'), findsOneWidget);
-      expect(find.text('Os Meus Eventos'), findsOneWidget);
-      expect(find.text('Criar Evento'), findsOneWidget);
-      expect(find.text('Métricas de Desempenho'), findsOneWidget);
-      expect(find.text('Total de Eventos'), findsOneWidget);
+      expect(find.text('Meus Eventos'), findsOneWidget);
+      expect(find.text('Criar'), findsOneWidget);
+      expect(find.text('Plano Atual: Freemium'), findsOneWidget);
+      expect(find.text('0/1 eventos'), findsOneWidget);
+      expect(find.text('Fazer Upgrade para Ilimitado (5€)'), findsOneWidget);
+      expect(find.text('Total Eventos'), findsOneWidget);
       expect(find.text('Cliques no Mapa'), findsOneWidget);
       expect(find.text('Pessoas no Radar'), findsOneWidget);
+      expect(find.text('Taxa de Conversão'), findsOneWidget);
     });
 
-    testWidgets('Can switch tabs between Dashboard, Os Meus Eventos, and Criar Evento', (tester) async {
+    testWidgets('Can switch tabs between Dashboard, Meus Eventos, and Criar', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: LotusAdminScreen(),
@@ -268,17 +271,24 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap on 'Os Meus Eventos' tab
-      await tester.tap(find.text('Os Meus Eventos'));
+      // Tap on 'Meus Eventos' tab
+      await tester.tap(find.text('Meus Eventos'));
       await tester.pumpAndSettle();
 
-      // Tap on 'Criar Evento' tab
-      await tester.tap(find.text('Criar Evento'));
+      expect(find.text('Sunset Ribeira & Wine Sessions'), findsOneWidget);
+      expect(find.byIcon(Icons.edit_outlined), findsWidgets);
+      expect(find.byIcon(Icons.delete_outline), findsWidgets);
+
+      // Tap on 'Criar' tab
+      await tester.tap(find.text('Criar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Criar Novo Evento'), findsOneWidget);
-      expect(find.text('Título do Evento *'), findsOneWidget);
-      expect(find.text('Categoria *'), findsOneWidget);
+      expect(find.text('Novo Evento'), findsOneWidget);
+      expect(find.text('Título'), findsOneWidget);
+      expect(find.text('Morada / Link GPS'), findsOneWidget);
+      expect(find.text('Data'), findsOneWidget);
+      expect(find.text('Categoria'), findsOneWidget);
+      expect(find.text('Publicar Evento'), findsOneWidget);
     });
   });
 }
